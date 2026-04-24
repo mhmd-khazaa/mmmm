@@ -1,0 +1,79 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+enable_free_tier: false
+
+reviews:
+  request_changes_workflow: false
+  fail_commit_status: false
+  sequence_diagrams: false
+  estimate_code_review_effort: false
+  assess_linked_issues: false
+  related_issues: false
+  related_prs: false
+  auto_apply_labels: false
+  suggested_reviewers: false
+  in_progress_fortune: false
+  poem: false
+  enable_prompt_for_ai_agents: false
+
+  # path_filters:
+  #   - "!vendor/**"
+
+  # path_instructions:
+    # - path: src/hooks/**/*.ts
+    #   instructions: |-
+    #     Review invokable controllers as production API code.
+    #     This project uses single-action invokable controllers (one __invoke method per controller).
+    #     Focus on:
+    #     - thin controllers: delegate business logic to Action classes, not inline
+    #     - correct use of Form Requests for validation (type-hinted in __invoke)
+    #     - correct authorization via Laratrust roles/permissions or middleware (no policies in this project)
+    #     - returning consistent responses via ApiResponses trait (successResponse, errorResponse, paginatedResponse)
+    #     - correct Scramble API doc attributes (#[Group], #[Endpoint], #[BodyParameter], etc.)
+    #     - avoiding direct query building — queries belong in Models/Queries/ classes
+    #     - preventing mass assignment, insecure filtering, and unsafe user-controlled input usage
+    #     - checking for proper pagination, filtering, and eager loading usage
+    #     Prefer findings that reduce regression risk, security issues, and architectural drift.
+
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+
+  pre_merge_checks:
+    docstrings:
+      mode: off
+
+    title:
+      requirements: >-
+        Title must be clear, concise, and descriptive. Avoid vague titles like
+        "fix", "update", or "changes". Do not use "WIP". Prefer titles that
+        reflect the main API, database, security, or architectural change.
+
+    description:
+      mode: off
+
+    issue_assessment:
+      mode: off
+
+chat:
+  art: false
+  allow_non_org_members: false
+
+knowledge_base:
+  learnings:
+    scope: local
+  issues:
+    scope: local
+  jira:
+    usage: disabled
+  linear:
+    usage: disabled
+  pull_requests:
+    scope: local
+
+issue_enrichment:
+  planning:
+    enabled: false
+    auto_planning:
+      enabled: false
