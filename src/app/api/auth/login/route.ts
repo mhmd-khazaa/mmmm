@@ -6,13 +6,11 @@ import {
   resolveTenantBaseUrl,
 } from '@/lib/auth/tenant-auth';
 import { setTenantSessionCookies, tenantApiFetch } from '@/lib/auth/tenant-api';
+import { passwordSchema } from '@/validators/login.schema';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters long')
-    .max(100, 'Password must be at most 100 characters long'),
+  password: passwordSchema,
   tenantBaseUrl: z.string().url('Invalid tenant base URL').optional(),
 });
 

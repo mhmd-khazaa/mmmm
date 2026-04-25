@@ -1,220 +1,46 @@
-type JsonRecord = Record<string, unknown>;
+import { AUTH_PATHS } from '@/config/api';
+import { JsonRecord } from '@/lib/http-client';
+import { tenantPost } from '@/lib/auth/tenant-http';
+import {
+  clearTenantBaseUrl,
+  getStoredAuthToken,
+  getStoredTenantBaseUrl,
+  persistAuthToken,
+} from '@/lib/auth/tenant-storage';
 
-const TENANT_LOOKUP_URL = 'https://pit-lookup.notprovision.com/';
-export const TENANT_BASE_URL_STORAGE_KEY = 'pit_tenant_base_url';
-export const AUTH_TOKEN_STORAGE_KEY = 'pit_auth_token';
-let authTokenInMemory: string | null = null;
+export {
+  TENANT_BASE_URL_STORAGE_KEY,
+  AUTH_TOKEN_STORAGE_KEY,
+} from '@/config/api';
+export { lookupTenantBaseUrl } from '@/lib/auth/tenant-http';
+export { persistTenantBaseUrl } from '@/lib/auth/tenant-storage';
 
 function isJsonRecord(value: unknown): value is JsonRecord {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function extractMessage(payload: unknown, fallbackMessage: string) {
-  if (typeof payload === 'string' && payload.trim()) {
-    return payload;
-  }
+function extractToken(payload: unknown): string | null {
+  const candidates: unknown[] = [];
 
-  if (!isJsonRecord(payload)) {
-    return fallbackMessage;
-  }
-
-  const directMessage = payload.message;
-
-  if (typeof directMessage === 'string' && directMessage.trim()) {
-    return directMessage;
-  }
-
-  const error = payload.error;
-
-  if (typeof error === 'string' && error.trim()) {
-    return error;
-  }
-
-  return fallbackMessage;
-}
-
-function extractLookupBaseUrl(payload: unknown) {
-  if (!isJsonRecord(payload)) {
-    return null;
-  }
-
-  const directCandidates = [payload.base_url, payload.baseUrl, payload.url];
-
-  for (const candidate of directCandidates) {
-    if (typeof candidate === 'string' && candidate.trim()) {
-      return candidate.trim().replace(/\/+$/, '');
+  if (isJsonRecord(payload)) {
+    candidates.push(payload.token, payload.access_token, payload.accessToken, payload.jwt);
+    if (isJsonRecord(payload.data)) {
+      candidates.push(
+        payload.data.token,
+        payload.data.access_token,
+        payload.data.accessToken,
+        payload.data.jwt
+      );
     }
   }
 
-  const nested = payload.data;
-
-  if (!isJsonRecord(nested)) {
-    return null;
-  }
-
-  const nestedCandidates = [nested.base_url, nested.baseUrl, nested.url];
-
-  for (const candidate of nestedCandidates) {
-    if (typeof candidate === 'string' && candidate.trim()) {
-      return candidate.trim().replace(/\/+$/, '');
-    }
-  }
-
-  return null;
-}
-
-function extractToken(payload: unknown) {
-  if (!isJsonRecord(payload)) {
-    return null;
-  }
-
-  const directCandidates = [
-    payload.token,
-    payload.access_token,
-    payload.accessToken,
-    payload.jwt,
-  ];
-
-  for (const candidate of directCandidates) {
-    if (typeof candidate === 'string' && candidate.trim()) {
-      return candidate;
-    }
-  }
-
-  const nested = payload.data;
-
-  if (!isJsonRecord(nested)) {
-    return null;
-  }
-
-  const nestedCandidates = [
-    nested.token,
-    nested.access_token,
-    nested.accessToken,
-    nested.jwt,
-  ];
-
-  for (const candidate of nestedCandidates) {
+  for (const candidate of candidates) {
     if (typeof candidate === 'string' && candidate.trim()) {
       return candidate;
     }
   }
 
   return null;
-}
-
-async function apiPost(path: string, body?: JsonRecord, headers?: HeadersInit) {
-  let response: Response;
-
-  try {
-    const requestHeaders = new Headers({
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    });
-
-    if (headers) {
-      const customHeaders = new Headers(headers);
-
-      customHeaders.forEach((value, key) => {
-        requestHeaders.set(key, value);
-      });
-    }
-
-    response = await fetch(path, {
-      method: 'POST',
-      headers: requestHeaders,
-      body: body ? JSON.stringify(body) : undefined,
-    });
-  } catch {
-    throw new Error(`Network error while calling ${path}.`);
-  }
-
-  let data: unknown = null;
-
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      extractMessage(data, `Request failed. (${response.status}) [${path}]`)
-    );
-  }
-
-  return data;
-}
-
-async function resolveTenantBaseUrl(email: string) {
-  const payload = await apiPost(TENANT_LOOKUP_URL, { email });
-  const tenantBaseUrl = extractLookupBaseUrl(payload);
-
-  if (!tenantBaseUrl) {
-    throw new Error('Tenant lookup did not return a valid base URL.');
-  }
-
-  return tenantBaseUrl;
-}
-
-export function persistTenantBaseUrl(tenantBaseUrl: string) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.setItem(
-    TENANT_BASE_URL_STORAGE_KEY,
-    tenantBaseUrl.trim().replace(/\/+$/, '')
-  );
-}
-
-function getStoredTenantBaseUrl() {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  const tenantBaseUrl = window.localStorage.getItem(TENANT_BASE_URL_STORAGE_KEY);
-
-  if (!tenantBaseUrl?.trim()) {
-    return null;
-  }
-
-  return tenantBaseUrl.trim().replace(/\/+$/, '');
-}
-
-function persistAuthToken(authToken: string | null) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  if (!authToken) {
-    window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
-    return;
-  }
-
-  window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, authToken);
-}
-
-function getStoredAuthToken() {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  const authToken = window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
-
-  if (!authToken?.trim()) {
-    return null;
-  }
-
-  return authToken;
-}
-
-export async function lookupTenantBaseUrl(email: string) {
-  const tenantBaseUrl = await resolveTenantBaseUrl(email);
-
-  persistTenantBaseUrl(tenantBaseUrl);
-
-  return tenantBaseUrl;
 }
 
 export async function loginUser(payload: {
@@ -222,54 +48,52 @@ export async function loginUser(payload: {
   password: string;
   tenantBaseUrl?: string;
 }) {
-  const tenantBaseUrl = payload.tenantBaseUrl ?? (await lookupTenantBaseUrl(payload.email));
+  const response = await tenantPost(
+    AUTH_PATHS.login,
+    { email: payload.email, password: payload.password },
+    {
+      email: payload.email,
+      tenantBaseUrl: payload.tenantBaseUrl,
+      withAuthToken: false,
+      showSuccessToast: true,
+    }
+  );
 
-  persistTenantBaseUrl(tenantBaseUrl);
+  const token = extractToken(response);
+  persistAuthToken(token);
 
-  const loginPayload = await apiPost(`${tenantBaseUrl}/auth/login`, {
-    email: payload.email,
-    password: payload.password,
-  });
-
-  authTokenInMemory = extractToken(loginPayload);
-  persistAuthToken(authTokenInMemory);
-
-  return loginPayload;
+  return response;
 }
 
-export function logoutUser() {
+export async function logoutUser() {
   const tenantBaseUrl = getStoredTenantBaseUrl();
-  const authToken = authTokenInMemory ?? getStoredAuthToken();
-
-  const cleanup = () => {
-    authTokenInMemory = null;
-    persistAuthToken(null);
-  };
-
-  if (!authToken) {
-    throw new Error('No auth token available for logout.');
-  }
+  const authToken = getStoredAuthToken();
 
   if (!tenantBaseUrl) {
     throw new Error('Tenant base URL is not available for logout.');
   }
+  if (!authToken) {
+    throw new Error('No auth token available for logout.');
+  }
 
-  const normalizedAuthToken = authToken.toLowerCase().startsWith('bearer ')
-    ? authToken
-    : `Bearer ${authToken}`;
-
-  const headers = { Authorization: normalizedAuthToken };
-
-  return apiPost(`${tenantBaseUrl}/auth/logout`, undefined, headers).finally(cleanup);
+  try {
+    return await tenantPost(AUTH_PATHS.logout, undefined, { showSuccessToast: true });
+  } finally {
+    persistAuthToken(null);
+    clearTenantBaseUrl();
+  }
 }
 
 export async function requestPasswordReset(payload: { email: string }) {
-  const tenantBaseUrl =
-    getStoredTenantBaseUrl() ?? (await lookupTenantBaseUrl(payload.email));
-
-  persistTenantBaseUrl(tenantBaseUrl);
-
-  return apiPost(`${tenantBaseUrl}/auth/forgot-password`, { email: payload.email });
+  return tenantPost(
+    AUTH_PATHS.forgotPassword,
+    { email: payload.email },
+    {
+      email: payload.email,
+      withAuthToken: false,
+      showSuccessToast: true,
+    }
+  );
 }
 
 export async function verifyResetToken(payload: {
@@ -277,17 +101,16 @@ export async function verifyResetToken(payload: {
   token: string;
   tenantBaseUrl?: string;
 }) {
-  const tenantBaseUrl =
-    payload.tenantBaseUrl ??
-    getStoredTenantBaseUrl() ??
-    (await lookupTenantBaseUrl(payload.email));
-
-  persistTenantBaseUrl(tenantBaseUrl);
-
-  return apiPost(`${tenantBaseUrl}/auth/verify-reset-token`, {
-    email: payload.email,
-    token: payload.token,
-  });
+  return tenantPost(
+    AUTH_PATHS.verifyResetToken,
+    { email: payload.email, token: payload.token },
+    {
+      email: payload.email,
+      tenantBaseUrl: payload.tenantBaseUrl,
+      withAuthToken: false,
+      suppressErrorToast: true,
+    }
+  );
 }
 
 export async function resetPassword(payload: {
@@ -296,13 +119,18 @@ export async function resetPassword(payload: {
   password: string;
   password_confirmation: string;
 }) {
-  const tenantBaseUrl =
-    getStoredTenantBaseUrl() ?? (await lookupTenantBaseUrl(payload.email));
-
-  return apiPost(`${tenantBaseUrl}/auth/reset-password`, {
-    email: payload.email,
-    token: payload.token,
-    password: payload.password,
-    password_confirmation: payload.password_confirmation,
-  });
+  return tenantPost(
+    AUTH_PATHS.resetPassword,
+    {
+      email: payload.email,
+      token: payload.token,
+      password: payload.password,
+      password_confirmation: payload.password_confirmation,
+    },
+    {
+      email: payload.email,
+      withAuthToken: false,
+      showSuccessToast: true,
+    }
+  );
 }

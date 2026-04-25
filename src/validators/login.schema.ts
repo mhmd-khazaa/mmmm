@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+export const passwordSchema = z
+  .string()
+  .min(8, 'Password must be at least 8 characters long')
+  .max(100, 'Password must be at most 100 characters long');
+
 // form zod validation schema
 export const lookupLoginSchema = z.object({
   email: z.string().email(),
@@ -8,10 +13,7 @@ export const lookupLoginSchema = z.object({
 });
 
 export const loginSchema = lookupLoginSchema.extend({
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters long')
-    .max(100, 'Password must be at most 100 characters long'),
+  password: passwordSchema,
 });
 
 // generate form types from zod validation schema

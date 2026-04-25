@@ -1,7 +1,6 @@
-const TENANT_LOOKUP_URL = 'https://pit-lookup.notprovision.com/';
+import { TENANT_LOOKUP_URL } from '@/config/api';
 
-export const TENANT_BASE_URL_COOKIE = 'pit_tenant_base_url';
-export const AUTH_TOKEN_COOKIE = 'pit_auth_token';
+export { TENANT_BASE_URL_COOKIE, AUTH_TOKEN_COOKIE } from '@/config/api';
 
 type JsonRecord = Record<string, unknown>;
 

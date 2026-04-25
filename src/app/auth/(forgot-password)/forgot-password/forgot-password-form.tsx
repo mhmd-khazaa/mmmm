@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { SubmitHandler } from 'react-hook-form';
@@ -26,36 +25,6 @@ import {
 const initialValues = {
   email: '',
 };
-
-function extractForgotPasswordMessage(payload: unknown) {
-  if (typeof payload === 'string' && payload.trim()) {
-    return payload;
-  }
-
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-    return null;
-  }
-
-  const directMessage = (payload as { message?: unknown }).message;
-
-  if (typeof directMessage === 'string' && directMessage.trim()) {
-    return directMessage;
-  }
-
-  const nestedData = (payload as { data?: unknown }).data;
-
-  if (!nestedData || typeof nestedData !== 'object' || Array.isArray(nestedData)) {
-    return null;
-  }
-
-  const nestedMessage = (nestedData as { message?: unknown }).message;
-
-  if (typeof nestedMessage === 'string' && nestedMessage.trim()) {
-    return nestedMessage;
-  }
-
-  return null;
-}
 
 export default function ForgetPasswordForm() {
   const isMedium = useMedia('(max-width: 1200px)', false);
@@ -124,17 +93,10 @@ export default function ForgetPasswordForm() {
   const onRequestReset: SubmitHandler<ForgetPasswordSchema> = async (data) => {
     try {
       setIsSubmitting(true);
-      const response = await requestPasswordReset({ email: data.email });
-      const successMessage =
-        extractForgotPasswordMessage(response) ??
-        'If an account exists for this email, a password reset link has been sent.';
-
-      toast.success(successMessage);
+      await requestPasswordReset({ email: data.email });
       setReset(initialValues);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Unable to send reset link.'
-      );
+    } catch {
+      // Error toast is shown by the HTTP interceptor.
     } finally {
       setIsSubmitting(false);
     }
@@ -151,12 +113,9 @@ export default function ForgetPasswordForm() {
         password_confirmation: data.confirmPassword,
       });
 
-      toast.success('Password reset successfully. Please sign in.');
       router.push(routes.auth.signIn4);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Unable to reset password.'
-      );
+    } catch {
+      // Error toast is shown by the HTTP interceptor.
     } finally {
       setIsSubmitting(false);
     }
@@ -253,7 +212,9 @@ export default function ForgetPasswordForm() {
           resetValues={reset}
           onSubmit={onRequestReset}
           useFormProps={{
-            defaultValues: initialValues,
+            defaultValues: {
+              email: initialEmail,
+            },
           }}
         >
           {({ register, formState: { errors } }) => (

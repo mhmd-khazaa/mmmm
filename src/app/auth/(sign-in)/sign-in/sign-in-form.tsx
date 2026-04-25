@@ -30,6 +30,7 @@ export default function SignInForm() {
     register,
     handleSubmit,
     watch,
+    setValue,
     setError,
     clearErrors,
     resetField,
@@ -50,6 +51,7 @@ export default function SignInForm() {
 
         setResolvedTenantBaseUrl(tenantBaseUrl);
         setResolvedEmail(data.email);
+        setValue('email', data.email, { shouldValidate: true });
         clearErrors('password');
         toast.success('Email verified. Enter your password to continue.');
         return;
@@ -64,16 +66,13 @@ export default function SignInForm() {
       }
 
       await loginUser({
-        email: data.email,
+        email: resolvedEmail ?? data.email,
         password: data.password,
-        tenantBaseUrl: resolvedTenantBaseUrl,
+        tenantBaseUrl: resolvedTenantBaseUrl ?? undefined,
       });
-      toast.success('Signed in successfully.');
       router.push(routes.file.manager);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Unable to sign in right now.'
-      );
+    } catch {
+      // Error toast is shown by the HTTP interceptor.
     } finally {
       setIsSubmitting(false);
     }
@@ -92,6 +91,9 @@ export default function SignInForm() {
 
   const emailField = register('email');
   const passwordField = register('password');
+  const forgotPasswordHref = resolvedEmail
+    ? `${routes.auth.forgotPassword4}?email=${encodeURIComponent(resolvedEmail)}`
+    : routes.auth.forgotPassword4;
 
   return (
     <>
@@ -103,6 +105,7 @@ export default function SignInForm() {
             label="Email"
             placeholder="Enter your email"
             className="[&>label>span]:font-medium"
+            readOnly={isPasswordStep}
             {...emailField}
             error={errors.email?.message}
           />
@@ -131,7 +134,7 @@ export default function SignInForm() {
             />
             {isPasswordStep ? (
               <Link
-                href={routes.auth.forgotPassword4}
+                href={forgotPasswordHref}
                 className="h-auto p-0 text-sm font-semibold text-gray-700 underline transition-colors hover:text-primary hover:no-underline"
               >
                 Forgot Password?
