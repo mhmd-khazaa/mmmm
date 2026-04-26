@@ -1,12 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { ReactElement, ReactNode, RefObject, useState } from "react";
+import { ReactElement, useState } from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Title, Text, Popover, Avatar, Badge } from "rizzui";
-import cn from "@/utils/class-names";
-import { routes } from "@/config/routes";
+import { cn } from "@/lib/utils";
 import { useMedia } from "@/hooks/use-media";
 import SimpleBar from "@/components/ui/simplebar";
 import { PiCheck } from "react-icons/pi";
@@ -131,13 +129,13 @@ function MessagesList({
     <div className="w-[320px] text-left sm:w-[360px] 2xl:w-[420px] rtl:text-right">
       <div className="mb-2 flex items-center justify-between ps-6">
         <Title as="h5">Messages</Title>
-        <Link
-          href={routes.support.inbox}
+        <button
           onClick={() => setIsOpen(false)}
           className="hover:underline"
+          type="button"
         >
           View all
-        </Link>
+        </button>
       </div>
       <SimpleBar className="max-h-[406px]">
         <div className="grid grid-cols-1 ps-4">

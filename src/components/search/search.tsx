@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Modal } from "@/components/modal";
+import { Modal } from "@/components/ui/modal";
 import SearchTrigger from "@/components/search/search-trigger";
 import SearchList from "@/components/search/search-list";
 

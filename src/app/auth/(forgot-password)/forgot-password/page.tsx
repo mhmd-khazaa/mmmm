@@ -1,8 +1,11 @@
 import { Suspense } from 'react';
-import AuthWrapper from '@/app/shared/auth-layout/auth-wrapper';
-import ForgetPasswordForm from './forgot-password-form';
+import { metaObject } from '@/config/site.config';
+import AuthWrapper from '@/features/auth/components/AuthWrapper';
+import ForgotPasswordForm from '@/features/auth/components/ForgotPasswordForm';
 
-export default function ForgotPassword() {
+export const metadata = metaObject('Forgot Password');
+
+export default function ForgotPasswordPage() {
   return (
     <AuthWrapper
       title={
@@ -13,7 +16,7 @@ export default function ForgotPassword() {
       }
     >
       <Suspense fallback={null}>
-        <ForgetPasswordForm />
+        <ForgotPasswordForm />
       </Suspense>
     </AuthWrapper>
   );

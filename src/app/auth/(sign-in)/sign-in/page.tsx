@@ -1,10 +1,8 @@
-import AuthWrapper from '@/app/shared/auth-layout/auth-wrapper';
-import SignInForm from './sign-in-form';
 import { metaObject } from '@/config/site.config';
+import AuthWrapper from '@/features/auth/components/AuthWrapper';
+import SignInForm from '@/features/auth/components/SignInForm';
 
-export const metadata = {
-  ...metaObject('Sign In'),
-};
+export const metadata = metaObject('Sign In');
 
 export default function SignInPage() {
   return (
@@ -15,7 +13,7 @@ export default function SignInPage() {
         </>
       }
       isSignIn
-      isSocialLoginActive={true}
+      isSocialLoginActive
     >
       <SignInForm />
     </AuthWrapper>

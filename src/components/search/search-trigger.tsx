@@ -1,5 +1,5 @@
 import { PiCommand, PiMagnifyingGlassBold } from "react-icons/pi";
-import { cn } from "@/utils/class-names";
+import { cn } from "@/lib/utils";
 
 type SearchTriggerProps = {
   placeholderClassName?: string;

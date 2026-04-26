@@ -1,11 +1,8 @@
 "use client";
 
-import {
-  DrawerPlacements,
-  useDrawer,
-} from "@/app/shared/drawer-views/use-drawer";
+import { DrawerPlacements, useDrawer } from "@/hooks/use-drawer";
 import { ActionIcon } from "rizzui";
-import cn from "@/utils/class-names";
+import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
 
 interface Props {

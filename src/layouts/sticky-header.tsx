@@ -1,6 +1,6 @@
 "use client";
 
-import cn from "@/utils/class-names";
+import { cn } from "@/lib/utils";
 import { useIsMounted } from "@/hooks/use-is-mounted";
 import { useWindowScroll } from "@/hooks/use-window-scroll";
 

@@ -1,36 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
-import { Title, Text, Avatar, Button, Popover } from "rizzui";
-import cn from "@/utils/class-names";
+import { Avatar, Button, Popover, Text, Title } from "rizzui";
+import { cn } from "@/lib/utils";
 import { routes } from "@/config/routes";
-import { logoutUser } from "@/lib/auth/auth-client";
+import { logout } from "@/lib/auth";
 
-// Mock user data - replace with real user context when available
 const MOCK_USER = {
   name: "Albert Flores",
   displayName: "Albert",
   email: "flores@doe.io",
-  avatar: "https://isomorphic-furyroad.s3.amazonaws.com/public/avatars/avatar-11.webp",
+  avatar:
+    "https://isomorphic-furyroad.s3.amazonaws.com/public/avatars/avatar-11.webp",
 };
-
-const menuItems = [
-  {
-    name: "My Profile",
-    href: routes.profile,
-  },
-  {
-    name: "Account Settings",
-    href: routes.forms.profileSettings,
-  },
-  {
-    name: "Activity Log",
-    href: "#",
-  },
-];
 
 function DropdownMenu() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,13 +22,10 @@ function DropdownMenu() {
   const handleLogout = async () => {
     try {
       setIsSubmitting(true);
-      await logoutUser();
-      toast.success("Signed out successfully.");
-      router.push(routes.auth.signIn1);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Unable to sign out right now."
-      );
+      await logout();
+      router.push(routes.auth.signIn);
+    } catch {
+      // Toast already shown by the API interceptor.
     } finally {
       setIsSubmitting(false);
     }
@@ -54,10 +34,7 @@ function DropdownMenu() {
   return (
     <div className="w-64 text-left rtl:text-right">
       <div className="flex items-center border-b border-gray-300 px-6 pb-5 pt-6">
-        <Avatar
-          src={MOCK_USER.avatar}
-          name={MOCK_USER.name}
-        />
+        <Avatar src={MOCK_USER.avatar} name={MOCK_USER.name} />
         <div className="ms-3">
           <Title as="h6" className="font-semibold">
             {MOCK_USER.name}
@@ -65,20 +42,9 @@ function DropdownMenu() {
           <Text className="text-gray-600">{MOCK_USER.email}</Text>
         </div>
       </div>
-      <div className="grid px-3.5 py-3.5 font-medium text-gray-700">
-        {menuItems.map((item) => (
-          <Link
-            key={item.name}
-            href={item.href}
-            className="group my-0.5 flex items-center rounded-md px-2.5 py-2 hover:bg-gray-100 focus:outline-none hover:dark:bg-gray-50/50"
-          >
-            {item.name}
-          </Link>
-        ))}
-      </div>
-      <div className="border-t border-gray-300 px-6 pb-6 pt-5">
+      <div className="px-6 py-5">
         <Button
-          className="h-auto w-full justify-start p-0 font-medium text-gray-700 outline-none focus-within:text-gray-600 hover:text-gray-900 focus-visible:ring-0"
+          className="h-auto w-full justify-start p-0 font-medium text-gray-700 outline-none hover:text-gray-900 focus-visible:ring-0"
           variant="text"
           onClick={handleLogout}
           isLoading={isSubmitting}
@@ -118,7 +84,7 @@ export default function ProfileMenu({
         <button
           className={cn(
             "w-9 shrink-0 rounded-full outline-none focus-visible:ring-[1.5px] focus-visible:ring-gray-400 focus-visible:ring-offset-2 active:translate-y-px sm:w-10",
-            buttonClassName,
+            buttonClassName
           )}
         >
           <Avatar

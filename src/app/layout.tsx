@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { inter, lexendDeca } from "@/app/fonts";
-import cn from "@/utils/class-names";
+import { cn } from "@/lib/utils";
 import NextProgress from "@/components/next-progress";
-import HydrogenLayout from "@/layouts/hydrogen/layout";
-import { ThemeProvider, JotaiProvider } from "@/app/shared/theme-provider";
-import GlobalDrawer from "@/app/shared/drawer-views/container";
-import GlobalModal from "@/app/shared/modal-views/container";
+import Toaster from "@/components/toaster";
+import DashboardLayout from "@/layouts/dashboard/layout";
+import { ThemeProvider, JotaiProvider } from "@/providers/theme-provider";
+import GlobalDrawer from "@/providers/global-drawer";
+import GlobalModal from "@/providers/global-modal";
 
 import "./globals.css";
 
@@ -20,23 +21,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang=""
-      // 💡 Prevent next-themes hydration warning
-      suppressHydrationWarning
-    >
+    <html lang="" suppressHydrationWarning>
       <body
-        // to prevent any warning that is caused by third party extensions like Grammarly
         suppressHydrationWarning
         className={cn(inter.variable, lexendDeca.variable, "font-inter")}
       >
         <ThemeProvider>
           <NextProgress />
           <JotaiProvider>
-            <HydrogenLayout>{children}</HydrogenLayout>
+            <DashboardLayout>{children}</DashboardLayout>
             <GlobalDrawer />
             <GlobalModal />
           </JotaiProvider>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
